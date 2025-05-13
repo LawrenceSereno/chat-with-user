@@ -60,15 +60,18 @@ public class AdminChatActivity extends AppCompatActivity {
                         return;
                     }
 
-                    messageList.clear();
-                    for (QueryDocumentSnapshot doc : snapshots) {
-                        Message message = doc.toObject(Message.class);
-                        messageList.add(message);
+                    if (snapshots != null) {
+                        messageList.clear();
+                        for (QueryDocumentSnapshot doc : snapshots) {
+                            Message message = doc.toObject(Message.class);
+                            messageList.add(message);
+                        }
+                        messageAdapter.notifyDataSetChanged();
+                        chatRecyclerView.scrollToPosition(messageList.size() - 1);
                     }
-                    messageAdapter.notifyDataSetChanged();
-                    chatRecyclerView.scrollToPosition(messageList.size() - 1);
                 });
     }
+
 
     private void sendMessage() {
         String messageText = messageEditText.getText().toString().trim();

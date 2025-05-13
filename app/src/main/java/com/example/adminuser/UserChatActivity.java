@@ -86,13 +86,16 @@ public class UserChatActivity extends AppCompatActivity {
                         Toast.makeText(UserChatActivity.this, "Error: " + e.getMessage(), Toast.LENGTH_SHORT).show();
                         return;
                     }
-                    messageList.clear();
-                    for (QueryDocumentSnapshot doc : queryDocumentSnapshots) {
-                        Message message = doc.toObject(Message.class);
-                        messageList.add(message);
+
+                    if (queryDocumentSnapshots != null) {
+                        messageList.clear();
+                        for (QueryDocumentSnapshot doc : queryDocumentSnapshots) {
+                            Message message = doc.toObject(Message.class);
+                            messageList.add(message);
+                        }
+                        messageAdapter.notifyDataSetChanged();
+                        chatRecyclerView.scrollToPosition(messageList.size() - 1);
                     }
-                    messageAdapter.notifyDataSetChanged();
-                    chatRecyclerView.scrollToPosition(messageList.size() - 1);
                 });
     }
 

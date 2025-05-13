@@ -23,7 +23,7 @@ public class AdminDashboardActivity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_admin_dashboard);
 
-        usersRecyclerView = findViewById(R.id.usersRecyclerView); // Make sure this ID exists in your layout
+        usersRecyclerView = findViewById(R.id.usersRecyclerView);
         firestore = FirebaseFirestore.getInstance();
         usersList = new ArrayList<>();
 

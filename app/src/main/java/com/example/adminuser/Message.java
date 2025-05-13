@@ -7,7 +7,7 @@ public class Message {
     private long timestamp;
 
     public Message() {
-        // Default constructor required for Firebase
+        // Default constructor required for Firestore
     }
 
     public Message(String senderId, String receiverId, String message, long timestamp) {
@@ -17,6 +17,7 @@ public class Message {
         this.timestamp = timestamp;
     }
 
+    // Getters and Setters
     public String getSenderId() {
         return senderId;
     }
