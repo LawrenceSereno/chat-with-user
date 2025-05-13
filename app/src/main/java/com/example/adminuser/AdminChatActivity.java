@@ -4,18 +4,12 @@ import android.os.Bundle;
 import android.widget.EditText;
 import android.widget.ImageView;
 import android.widget.Toast;
-
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
-
 import com.example.adminuser.Adapter.MessageAdapter;
-import com.google.firebase.firestore.FirebaseFirestore;
-import com.google.firebase.firestore.Query;
-import com.google.firebase.firestore.QueryDocumentSnapshot;
-
-import java.util.ArrayList;
-import java.util.List;
+import com.google.firebase.firestore.*;
+import java.util.*;
 
 public class AdminChatActivity extends AppCompatActivity {
 
@@ -27,8 +21,9 @@ public class AdminChatActivity extends AppCompatActivity {
     private MessageAdapter messageAdapter;
     private List<Message> messageList;
 
-    private String adminId = "admin";  // Admin ID
-    private String userId = "user";    // User ID
+    private String adminId = "admin";
+    private String userId;
+    private String chatId;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -43,37 +38,35 @@ public class AdminChatActivity extends AppCompatActivity {
         messageList = new ArrayList<>();
         messageAdapter = new MessageAdapter(messageList);
 
-        // Set up RecyclerView
         chatRecyclerView.setLayoutManager(new LinearLayoutManager(this));
         chatRecyclerView.setAdapter(messageAdapter);
 
-        // Fetch messages from Firestore
-        fetchMessages();
+        userId = getIntent().getStringExtra("USER_ID");
+        chatId = adminId + "_" + userId;
 
-        // Send message when button is clicked
+        listenToMessages();
+
         sendButton.setOnClickListener(v -> sendMessage());
     }
 
-    private void fetchMessages() {
+    private void listenToMessages() {
         firestore.collection("chats")
-                .whereArrayContains("users", userId) // Fetch messages for admin and user
+                .document(chatId)
+                .collection("messages")
                 .orderBy("timestamp", Query.Direction.ASCENDING)
-                .addSnapshotListener((queryDocumentSnapshots, e) -> {
+                .addSnapshotListener((snapshots, e) -> {
                     if (e != null) {
-                        Toast.makeText(AdminChatActivity.this, "Error: " + e.getMessage(), Toast.LENGTH_SHORT).show();
+                        Toast.makeText(this, "Error: " + e.getMessage(), Toast.LENGTH_SHORT).show();
                         return;
                     }
-                    messageList.clear();
-                    for (QueryDocumentSnapshot doc : queryDocumentSnapshots) {
-                        String senderId = doc.getString("senderId");
-                        String receiverId = doc.getString("receiverId");
-                        String messageText = doc.getString("message");
-                        long timestamp = doc.getLong("timestamp");
 
-                        Message message = new Message(senderId, receiverId, messageText, timestamp);
+                    messageList.clear();
+                    for (QueryDocumentSnapshot doc : snapshots) {
+                        Message message = doc.toObject(Message.class);
                         messageList.add(message);
                     }
                     messageAdapter.notifyDataSetChanged();
+                    chatRecyclerView.scrollToPosition(messageList.size() - 1);
                 });
     }
 
@@ -85,17 +78,27 @@ public class AdminChatActivity extends AppCompatActivity {
         }
 
         long timestamp = System.currentTimeMillis();
-
-        // Create the message object
         Message message = new Message(adminId, userId, messageText, timestamp);
 
-        // Send the message to Firestore
+        // Send message to subcollection
         firestore.collection("chats")
+                .document(chatId)
+                .collection("messages")
                 .add(message)
-                .addOnSuccessListener(documentReference -> {
-                    messageEditText.setText("");  // Clear the input field
-                    fetchMessages();              // Refresh the chat
-                })
-                .addOnFailureListener(e -> Toast.makeText(AdminChatActivity.this, "Error sending message", Toast.LENGTH_SHORT).show());
+                .addOnSuccessListener(aVoid -> {
+                    messageEditText.setText("");
+                    updateChatMetadata(message);
+                });
+    }
+
+    private void updateChatMetadata(Message message) {
+        Map<String, Object> metadata = new HashMap<>();
+        metadata.put("users", Arrays.asList(adminId, userId));
+        metadata.put("lastMessage", message.getMessage());
+        metadata.put("lastTimestamp", message.getTimestamp());
+
+        firestore.collection("chats")
+                .document(chatId)
+                .set(metadata, SetOptions.merge());
     }
 }

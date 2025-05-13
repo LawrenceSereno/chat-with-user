@@ -8,7 +8,7 @@ public class ChatMessage {
     private String message;
     private long timestamp;
 
-    public ChatMessage() {
+    public ChatMessage(String adminId, String userId, String messageText, long timestamp) {
         // Default constructor required for Firebase
     }
 

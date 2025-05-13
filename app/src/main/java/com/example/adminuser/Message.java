@@ -6,11 +6,10 @@ public class Message {
     private String message;
     private long timestamp;
 
-    // Default constructor required for Firebase
     public Message() {
+        // Default constructor required for Firebase
     }
 
-    // Constructor with parameters to create a new message
     public Message(String senderId, String receiverId, String message, long timestamp) {
         this.senderId = senderId;
         this.receiverId = receiverId;
@@ -18,7 +17,6 @@ public class Message {
         this.timestamp = timestamp;
     }
 
-    // Getters and Setters
     public String getSenderId() {
         return senderId;
     }

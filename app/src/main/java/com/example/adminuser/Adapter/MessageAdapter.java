@@ -5,6 +5,7 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.widget.TextView;
 
+import androidx.annotation.NonNull;
 import androidx.recyclerview.widget.RecyclerView;
 
 import com.example.adminuser.Message;
@@ -16,32 +17,33 @@ import java.util.List;
 import java.util.Locale;
 
 public class MessageAdapter extends RecyclerView.Adapter<MessageAdapter.MessageViewHolder> {
-    private List<Message> messageList;
 
-    // Constructor for initializing the list of messages
+    private List<Message> messageList;
+    private final String currentUserId = "admin"; // Or dynamically set this from activity
+
     public MessageAdapter(List<Message> messageList) {
         this.messageList = messageList;
     }
 
+    @NonNull
     @Override
-    public MessageViewHolder onCreateViewHolder(ViewGroup parent, int viewType) {
-        // Inflate the message item layout (item_message.xml)
+    public MessageViewHolder onCreateViewHolder(@NonNull ViewGroup parent, int viewType) {
         View view = LayoutInflater.from(parent.getContext()).inflate(R.layout.item_message, parent, false);
         return new MessageViewHolder(view);
     }
 
     @Override
-    public void onBindViewHolder(MessageViewHolder holder, int position) {
+    public void onBindViewHolder(@NonNull MessageViewHolder holder, int position) {
         Message message = messageList.get(position);
-
-        // Bind data to the views
-        holder.senderTextView.setText(message.getSenderId());
         holder.messageTextView.setText(message.getMessage());
+        holder.timestampTextView.setText(formatTimestamp(message.getTimestamp()));
 
-        // Format timestamp
-        SimpleDateFormat dateFormat = new SimpleDateFormat("HH:mm", Locale.getDefault());
-        String formattedTimestamp = dateFormat.format(new Date(message.getTimestamp()));
-        holder.timestampTextView.setText(formattedTimestamp);
+        // Example: Gray if user sent it, blue if admin
+        if (message.getSenderId().equals(currentUserId)) {
+            holder.messageTextView.setBackgroundResource(R.drawable.bg_sent);
+        } else {
+            holder.messageTextView.setBackgroundResource(R.drawable.bg_received);
+        }
     }
 
     @Override
@@ -49,17 +51,18 @@ public class MessageAdapter extends RecyclerView.Adapter<MessageAdapter.MessageV
         return messageList.size();
     }
 
-    // ViewHolder class that holds references to the views in each item
     public static class MessageViewHolder extends RecyclerView.ViewHolder {
-        TextView senderTextView, messageTextView, timestampTextView;
+        public TextView messageTextView, timestampTextView;
 
         public MessageViewHolder(View itemView) {
             super(itemView);
-
-            // Initialize the TextViews
-            senderTextView = itemView.findViewById(R.id.senderTextView);
             messageTextView = itemView.findViewById(R.id.messageTextView);
-           // Ensure this exists in your layout
+            timestampTextView = itemView.findViewById(R.id.timestampTextView);
         }
+    }
+
+    private String formatTimestamp(long timestamp) {
+        SimpleDateFormat sdf = new SimpleDateFormat("hh:mm a", Locale.getDefault());
+        return sdf.format(new Date(timestamp));
     }
 }
